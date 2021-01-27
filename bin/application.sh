@@ -261,8 +261,8 @@ main() {
     val_is_not_empty_string "$ARG_TAIL" \
         && say "(Tail of parameter line) /$ARG_TAIL/"
     local END=$(date +%s.%N)
-    START="$(printf "~%06.6f" "$(echo "$END - $START" | bc)")"
-    say -i "Completed. Duration: $START (s)"
+    START="$(printf "~%010.9f" "$(echo "$END - $START" | bc)")"
+    say -i "Completed. Duration: $START (s.ns)"
     exit $SUCCESS
 }
 
