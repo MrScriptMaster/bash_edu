@@ -133,7 +133,7 @@ echo "(Most outer extension) ${SOME_PATH##*.}"
 echo "(All extensions) ${SOME_PATH#*.}"
 echo "(Replace gz by bz2) ${SOME_PATH%.gz}.bz2"
 #
-# Замена и удаление подстрок в подстановках
+# Замена и удаление подстрок в подстановках (только Bash 4)
 TEST_STR="Very long long string with spaces."
 echo "(Original string) $TEST_STR" 
 echo "(Replace 'long' by 'short') ${TEST_STR//long/short}"  # Заменить все вхождения 
@@ -208,6 +208,7 @@ done
 #      - (звездочка)  *    Означает серию видимых символов, включая пробелы.
 #      - (вопрос)     ?    Означает один видимый символ или пробел.
 #      - (класс)     [ ]   В целом похож на класс в регулярных выражениях.
+# Примечание: в Bash 4 и ZSH есть также рекурсивный globbing через две звездочки '**/', но это не POSIX.
 echo "Shell script list: " *.sh                 # Вывести все файлы сценариев
 echo "File list: " *.[a-z][a-z][a-z]            # Вывести все файлы с расширениями из трех букв
 echo "File list: " *.[^y][a-z][a-z]             # Вывести все файлы с расширениями из трех букв, но чтобы
