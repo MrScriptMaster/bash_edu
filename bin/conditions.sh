@@ -66,6 +66,9 @@ fi
 
 DECLARED_VAR=
 DECLARED_AND_NOT_EMPTY_VAR="12345abc 456"
+declare -a NOT_EMPTY_ARRAY=('one' 'two' 'three')
+declare -a NOT_NULL_ARRAY=()
+declare -a NULL_ARRAY=
 # Следующие частности нужно просто запомнить
 [[ ! -z "$BASH_VERSION" ]] && echo "You are using Bash $BASH_VERSION"
 [ true ] ; echo "[ true ] returned $? - true is TRUE"  
@@ -80,6 +83,9 @@ DECLARED_AND_NOT_EMPTY_VAR="12345abc 456"
 # Примечание: Если в значении переменной есть пробелы, то ее всегда нужно закавычивать внутри [ ].
 [ "$DECLARED_AND_NOT_EMPTY_VAR" ] ; echo "[ \"\$DECLARED_AND_NOT_EMPTY_VAR\" ] returned $? - No empty variable is TRUE"
 [ "$NoT_InItIaLiZeD" ] ; echo "[ \"\$NoT_InItIaLiZeD\" ] returned $? - Not initiaized variable is always NULL and FALSE"
+[ "$NOT_EMPTY_ARRAY" ] ; echo "[ \"\$NOT_EMPTY_ARRAY\" ] returned $? - Not empty array is TRUE"
+[ "$NOT_NULL_ARRAY" ] ; echo "[ \"\$NOT_NULL_ARRAY\" ] returned $? - Not null but empty array is FALSE"
+[ "$NULL_ARRAY" ] ; echo "[ \"\$NULL_ARRAY\" ] returned $? - Null array is FALSE"
 [[ true ]] ; echo "[[ true ]] returned $? - true is TRUE"  
 [[ false ]] ; echo "[[ false ]] returned $? - false is not FALSE"
 [[ 0 ]] ; echo "[[ 0 ]] returned $? - Zero is TRUE"  
@@ -90,6 +96,9 @@ DECLARED_AND_NOT_EMPTY_VAR="12345abc 456"
 [[ $DECLARED_VAR ]] ; echo "[[ \$DECLARED_VAR ]] returned $? - Empty variable is FALSE"
 [[ $DECLARED_AND_NOT_EMPTY_VAR ]] ; echo "[[ \$DECLARED_AND_NOT_EMPTY_VAR ]] returned $? - No empty variable is TRUE"
 [[ $NoT_InItIaLiZeD ]] ; echo "[[ \$NoT_InItIaLiZeD ]] returned $? - Not initiaized variable is always NULL and FALSE"
+[[ "$NOT_EMPTY_ARRAY" ]] ; echo "[[ \"\$NOT_EMPTY_ARRAY\" ]] returned $? - Not empty array is TRUE"
+[[ "$NOT_NULL_ARRAY" ]] ; echo "[[ \"\$NOT_NULL_ARRAY\" ]] returned $? - Not null but empty array is FALSE"
+[[ "$NULL_ARRAY" ]] ; echo "[[ \"\$NULL_ARRAY\" ]] returned $? - Null array is FALSE"
 (( 0 )) ; echo "(( 0 )) returned $? - Zero is FALSE"
 (( 1 )) ; echo "(( 1 )) returned $? - Not zero is TRUE"
 (( -1 )); echo "(( -1 )) returned $? - Minus 1 is TRUE"
@@ -119,12 +128,24 @@ DECLARED_AND_NOT_EMPTY_VAR="12345abc 456"
 # Чтобы понять, что переменная не инициализирована или пустая, всегда используйте
 # опцию -z, при которой на это утверждение возвращается TRUE.
 [ -z "$_some_var" ] && echo "The string is not initialized or empty"
+[ -z "$NOT_EMPTY_ARRAY" ]; echo "[ -z \"\$NOT_EMPTY_ARRAY\" ] returned $?" 
+[ -z "$NOT_NULL_ARRAY" ]; echo "[ -z \"\$NOT_NULL_ARRAY\" ] returned $?" 
+[ -z "$NULL_ARRAY" ]; echo "[ -z \"\$NULL_ARRAY\" ] returned $?" 
 [[ -z $_some_var ]] && echo "The string is not initialized or empty"
+[[ -z "$NOT_EMPTY_ARRAY" ]]; echo "[[ -z \"\$NOT_EMPTY_ARRAY\" ]] returned $?" 
+[[ -z "$NOT_NULL_ARRAY" ]]; echo "[[ -z \"\$NOT_NULL_ARRAY\" ]] returned $?" 
+[[ -z "$NULL_ARRAY" ]]; echo "[[ -z \"\$NULL_ARRAY\" ]] returned $?" 
 
 # Используя опцию -n вы можете проверить строку на пустоту. Если проверка возвращает TRUE,
 # то строка не пустая, иначе пустая или не инициализирована.
 [ -n "$_some_var" ] || echo "The string is empty or not initialized"
+[ -n "$NOT_EMPTY_ARRAY" ]; echo "[ -n \"\$NOT_EMPTY_ARRAY\" ] returned $?" 
+[ -n "$NOT_NULL_ARRAY" ]; echo "[ -n \"\$NOT_NULL_ARRAY\" ] returned $?" 
+[ -n "$NULL_ARRAY" ]; echo "[ -n \"\$NULL_ARRAY\" ] returned $?" 
 [[ -n $_some_var ]] || echo "The string is empty or not initialized"
+[[ -n "$NOT_EMPTY_ARRAY" ]]; echo "[[ -n \"\$NOT_EMPTY_ARRAY\" ]] returned $?" 
+[[ -n "$NOT_NULL_ARRAY" ]]; echo "[[ -n \"\$NOT_NULL_ARRAY\" ]] returned $?" 
+[[ -n "$NULL_ARRAY" ]]; echo "[[ -n \"\$NULL_ARRAY\" ]] returned $?" 
 
 # ВНИМАНИЕ: [ -n ... ] очень коварная проверка, если она используется вместе с конструкцией
 # if ... fi или циклах БЕЗ КАВЫЧЕК.
