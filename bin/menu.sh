@@ -4,11 +4,11 @@ trap 'get_window_size' WINCH        # trap when a user has resized the window
 _UNDERLINE_ON=$(tput smul)          # turn on underline
 _UNDERLINE_OFF=$(tput rmul)         # turn off underline
  
-function get_window_size() {
+get_window_size() {
   _WINDOW_X=$(tput lines)
   _WINDOW_Y=$(tput cols)
  
-  _FULL_SPACES=$(echo "" | awk)
+  _FULL_SPACES=$(echo "")
   {
     _SPACES=${_WINDOW_Y}
     while ((_SPACES-- > 0)); do printf " "; done
@@ -21,7 +21,7 @@ function get_window_size() {
   return 0
 }
  
-function set_color() {
+set_color() {
   tput clear
   PS3="Enter Selection [1-9]: "
   select _COLOR in "Black" "Blue" "Green" "Cyan" "Red" "Magenta" "Yellow" "White" "Exit"
@@ -42,7 +42,7 @@ function set_color() {
   done
 }
 
-function print_colors() {
+print_colors() {
   tput clear
   for code in {1..256}; do
     echo -ne "\\033[01;${code}m${code}\\033[00m "
@@ -60,7 +60,7 @@ function print_colors() {
   read -p "Press [Enter] key to continue"
 }
 
-function print_colors_1() {
+print_colors_1() {
   tput clear
   for x in 0 1 4 5 7 8; do
     for i in $(seq 30 37); do
@@ -73,7 +73,18 @@ function print_colors_1() {
   read -p "Press [Enter] key to continue"
 }
 
-function show_menu() {
+print_palette() {
+  tput clear
+  for i in $(seq 0 255); do
+    printf "\e[0;48;5;${i}m %03d\e[0;38;5;${i}m %03d " $i $i
+    [[ $i -eq 7 || $i -eq 15 || $i -eq 231 || $i -eq 239 || $i -eq 247 ]] && echo
+    [[ $i -ge 15 && $i -le 231 && $(( ($i - 15) % 6 )) -eq 0 ]] && echo
+  done
+  echo
+  read -p "Press [Enter] key to continue"
+}
+
+show_menu() {
   while [[ -z ${_ANS} ]]
   do
     tput civis
@@ -89,6 +100,7 @@ printf "
   F) Foreground Text Color
   C) Print codes of colors
   T) Print table of colors
+  P) Print palette
   X) Exit
 "
     tput rc
@@ -103,6 +115,7 @@ printf "
       [Ff])  set_color "f" ;;
       [Cc])  print_colors  ;;
       [Tt])  print_colors_1 ;;
+      [Pp])  print_palette ;;
       [Xx])  tput clear; exit ;;
          *)
              echo -e "Invalid Selection: ${_ANS}\c"
