@@ -114,13 +114,12 @@ cfg_clean_up() {
     return $__CFG_TRUE
 }
 
-cfg_read_file 'etc/updates.cfg'
-
-str=""
-while cfg_get_next_parameter parameter; do
-    str="$parameter="
-    while cfg_get_next value; do
-        str="$str$value,"
-    done
-    echo "$str"
-done
+#cfg_read_file 'etc/updates.cfg'
+#str=""
+#while cfg_get_next_parameter parameter; do
+#    str="$parameter="
+#    while cfg_get_next value; do
+#        str="$str$value,"
+#    done
+#    echo "$str"
+#done
