@@ -104,12 +104,12 @@ done < <(grep "" "$TEMP_FILE_1")
 echo "---------------------------"
 [[ $IFS == $OLD_IFS ]] && echo "IFS has default value"
 # 
-# Вы можете реализовать многоуровневый парсинг. Главное помнить, что
+# Вы можете реализовать многоуровневый парсинг, меняя в нужный момент IFS. Главное помнить, что
 # стандартный поток ввода может читать только один цикл - самый внешний.
 echo
 echo "---- Configuration --------"
 cat "$TEMP_FILE_2"
-echo "---------------------------"
+echo "--- Solution 1 ------------"
 while IFS="$' '$'='$'\n'" read -r lhs rhs <&4; do # Меняем IFS: режем пробелы и символы равно и читаем файл построчно
     echo "Parameter: '$lhs'"
     # Парсим строки справа от равно
@@ -123,7 +123,21 @@ while IFS="$' '$'='$'\n'" read -r lhs rhs <&4; do # Меняем IFS: режем
         done
     done <<< $rhs
 done 4< "$TEMP_FILE_2" # Перенаправляем вход в другой поток, чтобы не занимать дескриптор 0
-echo "---------------------------"
+# Более универсальный подход
+echo "--- Solution 2 -------------"
+while IFS="$' '$'='$'\n'" read -r lhs rhs <&4; do
+    echo "Parameter: '$lhs'"
+    while [[ -n $rhs ]]; do
+        IFS=';' read -r begin tail <<< "$rhs"
+        IFS=':' read -r subparpam subvalue <<< "$begin"
+        [[ -z $subvalue ]] && echo -n "   Value: "
+        [[ -n $subvalue ]] && echo -n "   Sub param: "
+        echo "$subparpam"
+        [[ -n $subvalue ]] && echo "   Sub value: $subvalue"
+        rhs=$tail
+    done
+done 4< "$TEMP_FILE_2"
+echo "----------------------------"
 [[ $IFS == $OLD_IFS ]] && echo "IFS has default value"
 #
 # Однако, как показано ниже, при работе с автоматическими дескрипторами
@@ -175,4 +189,3 @@ interpreter <<< \
 get_random
 unknown command
 put \"Good bye!\""
-
