@@ -148,15 +148,13 @@ echo "----------------------------"
 # опцией команды read.
 while read line; do
     echo -e "$line"
-done <<< \
-"line 1 \n
+done <<< "line 1 \n
 line 2 
 line 3"
 # Сравните с (\n будет передана как есть)
 while read -r line; do
     echo -e "$line"
-done <<< \
-"line 1\n
+done <<< "line 1\n
 line 2
 line 3
 "
