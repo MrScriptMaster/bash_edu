@@ -40,8 +40,9 @@ mesh_style
 # ------ Интересные способы использования функций ------
 
 # Функции можно вкладывать
+echo "PID: $$"
 outer() {
-    echo "Called $FUNCNAME function";
+    echo "Called $FUNCNAME function. PID: $$";
     inner() {
         echo "Called $FUNCNAME function";       
     }
