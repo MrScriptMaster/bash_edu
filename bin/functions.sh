@@ -42,7 +42,7 @@ mesh_style
 # Функции можно вкладывать
 echo "PID: $$"
 outer() {
-    echo "Called $FUNCNAME function. PID: $$";
+    echo "Called $FUNCNAME function (${1:-parent}). PID: $BASHPID";
     inner() {
         echo "Called $FUNCNAME function";       
     }
@@ -52,7 +52,9 @@ outer() {
 inner || true    # ОШИБКА: функция inner не объявлена
 outer            # Теперь функция inner() объявлена, так как парсер прошел по телу outer().
 inner
-
+(outer "child")> >(cat)
+echo $(outer child | cat)
+echo "--------------------------"
 # Таким образом у вас есть некоторый простор для метапрограммирования в Bash.
 if [[ $? -eq 0 ]]; then
     call_me() { echo "Called $FUNCNAME function: realization 1"; }
