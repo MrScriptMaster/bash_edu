@@ -52,6 +52,7 @@ outer() {
 inner || true    # ОШИБКА: функция inner не объявлена
 outer            # Теперь функция inner() объявлена, так как парсер прошел по телу outer().
 inner
+(outer child)
 (outer "child")> >(cat)
 echo $(outer child | cat)
 echo "--------------------------"
