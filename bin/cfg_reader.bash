@@ -34,12 +34,34 @@ readonly __CFG_PREFIX_PARAMETER='p'
 readonly __CFG_PREFIX_APPENDED='a'
 __CFG_DELIMETER=':'
 
-cfg_upvar() {
-    if unset -v "$1"; then
-        if (( $# == 2 )); then
-            eval $1=\"\$2\"
-        fi
-    fi
+cfg_read_file_new() {
+    local file_path="$1"
+    local line lhs rhs
+    local is_in_param=$__CFG_FALSE
+    [[ -s $file_path ]] || return $__CFG_FALSE
+    while IFS= read -r line <&4 || [[ -n $line ]]; do
+        line=${line//[$'\r']}
+        while IFS='=' read -r lhs rhs; do
+            lhs="${lhs#"${lhs%%[![:space:]]*}"}"
+            lhs="${lhs%"${lhs##*[![:space:]]}"}"
+            if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then       
+                rhs="${rhs%%\#*}"
+                rhs="${rhs%%*( )}"
+                if [[ $rhs =~ \".*\" ]]; then
+                    rhs="${rhs%\"*}"
+                    rhs="${rhs#\"*}"
+                else
+                    rhs="${rhs#"${rhs%%[![:space:]]*}"}"
+                    rhs="${rhs%"${rhs##*[![:space:]]}"}"
+                fi
+                __CFG_FILE+=("${__CFG_PREFIX_PARAMETER}${__CFG_DELIMETER}${lhs}")
+                __CFG_FILE+=("${__CFG_PREFIX_APPENDED}${__CFG_DELIMETER}${rhs}")
+            else
+                is_in_param=$__CFG_FALSE
+            fi
+        done <<< "$line"
+    done 4< "$file_path"
+    return $__CFG_TRUE
 }
 
 cfg_read_file() {
