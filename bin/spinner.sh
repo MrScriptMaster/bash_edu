@@ -2,6 +2,8 @@
 
 readonly WAITING_TIME=2
 
+trap 'tput cnorm' EXIT SIGKILL
+
 spinner() {
     local pid=$1
     local delay=0.75
@@ -14,7 +16,7 @@ spinner() {
         sleep $delay
         printf "\b\b\b\b\b\b"
     done
-    tput cnorm
+    #tput cnorm
     printf "    \b\b\b\b"
 }
 
@@ -41,7 +43,7 @@ spinner_with_timer() {
         printf "$line"
     done
     tput el
-    tput cnorm
+    #tput cnorm
 }
 
 long_process_imitation() {
