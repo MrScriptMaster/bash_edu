@@ -9,7 +9,7 @@ spinner() {
     local delay=0.75
     local spinstr='|/-\'
     tput civis
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+    while [[ -n "$(ps a | awk '{print $1}' | grep $pid)" ]]; do
         local temp=${spinstr#?}
         printf " [%c]  " "$spinstr"
         local spinstr=$temp${spinstr%"$temp"}
@@ -30,7 +30,7 @@ spinner_with_timer() {
     local line
     local line_length
     tput civis
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+    while [[ -n "$(ps a | awk '{print $1}' | grep $pid)" ]]; do
         local temp=${spinstr#?}
         time_line=$(date +%X)
         printf -v line ' %s (%c)  %s' "${time_line}" "$spinstr" "$custom_line"
@@ -55,7 +55,7 @@ loading_string() {
     local line
     local line_length
     tput civis
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+    while [[ -n "$(ps a | awk '{print $1}' | grep $pid)" ]]; do
         if [[ $counter -lt 3 ]]; then
             dots="$dots."
             : $((counter += 1))
