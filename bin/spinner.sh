@@ -25,7 +25,6 @@ spinner_with_timer() {
     local custom_line=${2:-}
     local delay=0.75
     local spinstr='|/-\'
-    local time_format=%X
     local time_line
     local line
     local line_length
