@@ -4,6 +4,10 @@ f1() {
     echo "${FUNCNAME[0]}"
 }
 
+fn_is_def() {
+    [[ -n $(declare -f "$1") ]]
+}
+
 redefine() {
     [[ $# -eq 2 ]] || return 1
     local fname=$1
