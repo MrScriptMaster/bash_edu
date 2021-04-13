@@ -56,14 +56,70 @@ yaml_reader() {
             { print }'
         ) <"$yaml_file"
     }
+    #
+    # Out:
+    #  $1   indent level
+    #  $2   entry type: 'list' or 'record'
+    #  $3   key
+    #  $4   value
+    #  $5   entry
+    #  $6   indent_s
+    #
+    # Example:
+    #   __yaml_entry level type key value entry indent_s
+    #
+    __yaml_entry() {
+        [[ -z $1 || -z $2 || -z $3 || -z $4 || -z $5 ]] && return 1
+        printf -v $2 "record"
+        local indent_s=${6:-_}
+        declare -r entry=$5
+        local tmp=''
+        local tmp1=''
+        # Extracting key
+        tmp=${entry%%=(*}
+        # If last character is +, it is a list's entry
+        if [[ "$tmp" =~ .*\+ ]]; then
+            printf -v $2 "list"
+            tmp=${tmp%+}
+        fi
+        # If tmp is empty, it is a list's entry
+        if [[ ${#tmp} -eq 0 ]]; then
+            printf -v $2 "list"
+            printf -v $1 "0"
+        else
+            if (echo -n "$tmp" | grep "[^$indent_s]") >/dev/null ; then
+                tmp1="${tmp//$indent_s$indent_s/$indent_s}"
+            else
+                tmp1="$tmp"
+            fi
+            printf -v $1 "$(grep -o "$indent_s" <<< "$tmp1" | wc -l)"
+        fi
+        printf -v $3 "$tmp"
+        # Extracting value
+        tmp=${entry##*=}
+        tmp="${tmp%\"\)}"
+        tmp="${tmp#\(\"}"
+        printf -v $4 "$tmp"
+        return 0
+    }
     local seq_sign=${2:-_}
     local prefix=${3}
+    local ind tpe key value
     OLD_IFS=$IFS
     IFS=$(printf "\a")
-    for entry in $(__yaml_parser "$1" "$prefix" "$2"); do
-        [[ -n $entry ]] && echo $entry
+    for entry in $(__yaml_parser "$1" "$prefix" "$seq_sign"); do
+        if [[ -n $entry ]]; then
+            ind='' tpe='' key='' value=''
+            __yaml_entry ind tpe key value "$entry" "$seq_sign"
+            echo "ind=$ind"
+            echo "type=$tpe"
+            echo "key=$key"
+            echo "value=$value"
+            echo "$entry"
+            echo '------'
+        fi
     done
     IFS=$OLD_IFS
 }
 
-yaml_reader "./test.yml" @
+yaml_reader "./test.yml" \`
