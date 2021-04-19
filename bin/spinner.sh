@@ -20,6 +20,28 @@ spinner() {
     printf "    \b\b\b\b"
 }
 
+spinner1() {
+    local pid=$1
+    local delay=0.75
+    local spinstr='|/-\'
+    local line
+    local line_length
+    tput civis
+    while [[ -n "$(ps a | awk '{print $1}' | grep $pid)" ]]; do
+        local temp=${spinstr#?}
+        printf -v line " [%c]  " "$spinstr"
+        line_length=${#line}
+        printf "%s" "$line"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf -v line '%*s' ${line_length}
+        line=${line// /'\b'}
+        printf "$line"
+    done
+    tput el
+    #tput cnorm
+}
+
 spinner_with_timer() {
     local pid=$1
     local custom_line=${2:-}
