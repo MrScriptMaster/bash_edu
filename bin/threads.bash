@@ -18,7 +18,20 @@ readonly _LIB_THR_VERSION='0.9'
 
 declare -a __THR_SPAWNED_SWARM=()
 _THR_PIPE='jghjYGa8.pipe'
-readonly _THR_PIPE_PATH="/tmp/$_THR_PIPE"
+readonly _THR_PIPE_PREFIX="/tmp"
+readonly _THR_PIPE_PATH="$_THR_PIPE_PREFIX/$_THR_PIPE"
+readonly _IN_PIPE_PREFIX="$_THR_PIPE_PREFIX/in_pipe"
+
+thr_last_in_swarm() {
+    [[ ${#__THR_SPAWNED_SWARM[@]} -eq '0' ]] && printf "" && return 1
+    printf "${__THR_SPAWNED_SWARM[${#__THR_SPAWNED_SWARM[@]}-1]}"
+    return 0
+}
+
+thr_kill_swarm() {
+    [[ ${#__THR_SPAWNED_SWARM[@]} -ne '0' ]] || return 1
+    kill -9 ${__THR_SPAWNED_SWARM[@]} 2>&1 >/dev/null
+}
 
 thr_add_to_swarm() {
     __thr_swarm_queue() {
@@ -52,7 +65,7 @@ thr_add_to_swarm() {
     local routine="$1"
     shift
     local pipe="$_THR_PIPE_PATH"
-    if [[ ! -p $pipe ]]; then 
+    if [[ ! -p $pipe ]]; then
         mkfifo "$pipe"
         rc=$?
     fi
@@ -68,7 +81,6 @@ thr_join_to_swarm() {
         counter=0
         [[ -n $(declare -f "__thr_join_to_swarm_before_before") ]] && __thr_join_to_swarm_before_before
         for task in "${__THR_SPAWNED_SWARM[@]}"; do
-            echo "$counter |${__THR_SPAWNED_SWARM[$counter]}|"
             if [[ -n "$(ps -e --sort cmd --format pid | awk '{print $1}' | grep "^${task}$")" ]]; then
                 [[ -n $(declare -f "__thr_join_to_swarm_event") ]] && __thr_join_to_swarm_event "$task" 'tick'
             else
@@ -80,10 +92,11 @@ thr_join_to_swarm() {
             : $((counter += 1))
         done
         [[ $is_empty == 'true' ]] && break
-        [[ -n $(declare -f "__thr_join_to_swarm_after_after") ]] && __thr_join_to_swarm_after_after        
+        [[ -n $(declare -f "__thr_join_to_swarm_after_after") ]] && __thr_join_to_swarm_after_after
         sleep $delay
     done
     [[ -n $(declare -f "__thr_join_to_swarm_after") ]] && __thr_join_to_swarm_after
+    __THR_SPAWNED_SWARM=()
     return 0
 }
 
@@ -112,7 +125,7 @@ thr_join_to_1() {
         printf "$line"
     done
     tput el
-    #tput cnorm
+    tput cnorm
 }
 
 thr_join_to_2() {
@@ -137,35 +150,43 @@ thr_join_to_2() {
         printf "$line"
     done
     tput el
-    #tput cnorm
+    tput cnorm
 }
 
-long_process_imitation() {
-    sleep "$1"
+#
+# Read pipe and wait for data.
+#
+# IMPORTANT: This is blocking operation.
+#
+thr_wait4data() {
+    local reading_pipe=$1
+    [[ -p $reading_pipe ]] || {
+        echo -n ""
+        return 1
+    }
+    local line
+    while :; do
+        if read line <$reading_pipe; then
+            break
+        fi
+    done
+    echo -n "$line"
+    return 0
 }
 
-__thr_join_to_swarm_event() {
-    case "$2" in
-    tick)
-        echo "Tick from $1"
-        ;;
-    stop)
-        echo "Stop from $1"
-        ;;
-    esac
+thr_prepare_pipes() {
+    mkfifo "$_IN_PIPE_PREFIX.${BASHPID}"
 }
 
-__thr_join_to_swarm_after_after() {
-    echo "After After: ${__THR_SPAWNED_SWARM[*]}"
+thr_remove_pipes() {
+    rm -f "$_IN_PIPE_PREFIX.${BASHPID}"
 }
 
-__thr_join_to_swarm_before_before() {
-    echo "Before Before: ${__THR_SPAWNED_SWARM[*]}"
+thr_send_to_pipe() {
+    local pipe=$1
+    local message=$2
+    [[ -p $pipe ]] || return 1
+    [[ -n $message ]] || return 2
+    echo "$message" >$pipe
+    return 0
 }
-
-echo "Parent $$"
-
-thr_add_to_swarm 'long_process_imitation' 6
-thr_add_to_swarm 'long_process_imitation' 2
-thr_add_to_swarm 'long_process_imitation' 8
-thr_join_to_swarm
