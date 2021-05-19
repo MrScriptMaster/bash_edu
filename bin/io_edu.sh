@@ -126,7 +126,7 @@ log() {
         -i | --info) printf "[Info]: " ;;
         -w | --warn) exec 1>&4; printf "[Warn]: " ;;
         -e | --error) exec 1>&4; printf "[Error]: " ;;
-        *) printf "$option\n" ;;
+        *) printf "$option\n" && exec 1>&3 ;;
         esac
     done
     exec 1>&5
