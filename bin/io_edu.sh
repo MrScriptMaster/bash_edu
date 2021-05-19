@@ -120,9 +120,7 @@ rm -f $TEMPFILE
 readonly LOG_MAIN='main.log'
 readonly LOG_ERRORS='error.log'
 
-log() {
-    exec 5>&1
-    exec 1>&3
+log() { 
     for option in "$@"; do
         case $option in
         -i | --info) printf "[Info]: " ;;
@@ -132,7 +130,7 @@ log() {
         esac
     done
     exec 1>&5
-} 3>>"${LOG_MAIN}" 4>>"${LOG_ERRORS}"
+} 3>>"${LOG_MAIN}" 4>>"${LOG_ERRORS}" 5>&1 1>&3
 
 log -i "Process is started."
 log -w "Not found configuration. Using default values."
