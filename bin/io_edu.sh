@@ -115,3 +115,26 @@ echo "-------------------"
 cat $TEMPFILE
 #
 rm -f $TEMPFILE
+
+# Законченный пример функции логирования.
+readonly LOG_MAIN='main.log'
+readonly LOG_ERRORS='error.log'
+
+log() {
+    exec 5>&1
+    exec 1>&3
+    for option in "$@"; do
+        case $option in
+        -i | --info) printf "[Info]: " ;;
+        -w | --warn) exec 1>&4; printf "[Warn]: " ;;
+        -e | --error) exec 1>&4; printf "[Error]: " ;;
+        *) printf "$option\n" ;;
+        esac
+    done
+    exec 1>&5
+} 3>>"${LOG_MAIN}" 4>>"${LOG_ERRORS}"
+
+log -i "Process is started."
+log -w "Not found configuration. Using default values."
+log -e "Error occured."
+log "My string"
