@@ -7,7 +7,7 @@
     }
 
 readonly _LIB_THR_PREFIX='thr'
-readonly _LIB_THR_VERSION='0.9'
+readonly _LIB_THR_VERSION='1.0'
 
 # Compatible with Bash 4 only.
 [[ -n "$BASHPID" ]] ||
@@ -21,6 +21,7 @@ _THR_PIPE='jghjYGa8.pipe'
 readonly _THR_PIPE_PREFIX="/tmp"
 readonly _THR_PIPE_PATH="$_THR_PIPE_PREFIX/$_THR_PIPE"
 readonly _IN_PIPE_PREFIX="$_THR_PIPE_PREFIX/in_pipe"
+declare -i _THR_ENABLE_PROMISES=0
 
 thr_last_in_swarm() {
     [[ ${#__THR_SPAWNED_SWARM[@]} -eq '0' ]] && printf "" && return 1
@@ -59,6 +60,12 @@ thr_add_to_swarm() {
         [[ -p $pipe ]] || return 16
         echo "$BASHPID" >$pipe
         $routine_name "$@"
+        local -i rc=$?
+        if [[ $_THR_ENABLE_PROMISES -ne 0 ]]; then 
+            touch "$_THR_PIPE_PREFIX/$BASHPID.promise"
+            echo "$rc" >"$_THR_PIPE_PREFIX/$BASHPID.promise"
+        fi
+        return $rc
     }
     [[ $# -ne 0 ]] || return 1
     local rc
@@ -72,10 +79,44 @@ thr_add_to_swarm() {
     [[ $rc -eq '0' ]] && __thr_swarm_queue "$routine" "$pipe" "$@"
 }
 
+#
+# Return exit code from detached process. This code prints to the standard output.
+#
+# $1    PID of a process.
+# 
+# Returns:
+#    0   if succeed
+#    1   if the procedure didn't find a promise file.
+#    2   if the promise feature is disabled.
+#
+thr_get_return_code() {
+    local pid=$1
+    local pipe="$_THR_PIPE_PREFIX/$pid.promise"
+    local rc
+    [[ $_THR_ENABLE_PROMISES -ne 0 ]] || {
+        echo "Feature disabled"
+        return 2
+    }
+    [[ -f $pipe ]] || {
+        echo "-1"
+        return 1
+    }
+    while :; do
+        local line
+        if read rc <"$pipe"; then
+            rm -f "$pipe"
+            break
+        fi
+    done
+    echo "$rc"
+    return 0
+}
+
 thr_join_to_swarm() {
     local delay=0.75
     local counter=0
     local is_empty='false'
+    local guard=2
     [[ -n $(declare -f "__thr_join_to_swarm_before") ]] && __thr_join_to_swarm_before
     while [[ ${#__THR_SPAWNED_SWARM[@]} -ne "0" ]]; do
         counter=0
@@ -84,11 +125,15 @@ thr_join_to_swarm() {
             if [[ -n "$(ps -e --sort cmd --format pid | awk '{print $1}' | grep "^${task}$")" ]]; then
                 [[ -n $(declare -f "__thr_join_to_swarm_event") ]] && __thr_join_to_swarm_event "$task" 'tick'
             else
-                [[ -n $(declare -f "__thr_join_to_swarm_event") ]] && __thr_join_to_swarm_event "$task" 'stop'
-                unset "__THR_SPAWNED_SWARM[$counter]"
+                # Known Issue  
+                [[ $guard -eq 0 ]] && __THR_SPAWNED_SWARM=()
+                if [[ guard -ne 0 ]]; then
+                    [[ -n $(declare -f "__thr_join_to_swarm_event") ]] && __thr_join_to_swarm_event "$task" 'stop'
+                    unset "__THR_SPAWNED_SWARM[$counter]"
+                fi
+                [[ ${#__THR_SPAWNED_SWARM[@]} -le 1 ]] && : $(( guard -= 1 ))
             fi
-            # Known Issue
-            [[ $counter -eq 0 && ! -n ${__THR_SPAWNED_SWARM[$counter]} ]] && is_empty='true' && break
+            [[ $counter -eq 0 && ! -n ${__THR_SPAWNED_SWARM[*]} ]] && is_empty='true' && break
             : $((counter += 1))
         done
         [[ $is_empty == 'true' ]] && break
@@ -156,7 +201,7 @@ thr_join_to_2() {
 #
 # Read pipe and wait for data.
 #
-# IMPORTANT: This is blocking operation.
+# IMPORTANT: This is a blocking operation.
 #
 thr_wait4data() {
     local reading_pipe=$1
